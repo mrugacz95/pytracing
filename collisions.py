@@ -3,7 +3,7 @@ from models import Ray, Sphere
 
 
 def intersect(ray: Ray, sphere: Sphere):
-    L = ray.orig - sphere.center
+    L = ray.orig - sphere.pos
     a = ray.dir.dot(ray.dir)
     b = 2 * ray.dir.dot(L)
     c = L.dot(L) - sphere.radius * sphere.radius

@@ -4,22 +4,11 @@ import numpy as np
 from collisions import intersect
 from models import Camera, Sphere, Ray
 
-WIDTH = 20
+WIDTH = 28
 HEIGHT = 20
 
-OBJECTS = []
 
-
-def main():
-    camera = Camera()
-    camera.pos = np.array([0.0, 0.0, -5.0])
-    camera.dir = np.array([0.0, 0.0, 1.0])
-
-    sphere = Sphere()
-    sphere.radius = 9.5
-
-    OBJECTS.append(sphere)
-
+def render(camera, objects):
     img = np.zeros((HEIGHT, WIDTH, 3))
 
     y_offset = round(HEIGHT / 2)
@@ -31,18 +20,31 @@ def main():
             ray.dir = camera.dir
             ray.orig = ray.orig + np.array([pos_y, pos_x, 0.0])
 
-            for obj in OBJECTS:
+            for obj in objects:
                 if test_collision(ray, obj):
                     img[y][x] = obj.color
 
-    plt.imshow(img)
-    plt.show()
-
+    return img
 
 def test_collision(ray, obj):
     if isinstance(obj, Sphere):
         return intersect(ray, obj)
     raise ValueError("Unknown object type")
+
+
+def main():
+    camera = Camera(pos=np.array([0.0, 0.0, -15.0]))
+
+    sphere1 = Sphere(radius=9.5, color=np.array([1.0, 1.0, 0.0]))
+
+    sphere2 = Sphere(pos=np.array([3, 4, -12]), radius=9.5, color=np.array([0.0, 0.0, 1.0]))
+
+    objects = [sphere1, sphere2]
+
+    img = render(camera, objects)
+
+    plt.imshow(img)
+    plt.show()
 
 
 if __name__ == '__main__':
