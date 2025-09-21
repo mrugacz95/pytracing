@@ -7,8 +7,8 @@ from collisions import intersect
 from math_utils import norm
 from models import Camera, Sphere, Ray, Sun
 
-WIDTH = 280
-HEIGHT = 220
+WIDTH = 480
+HEIGHT = 420
 
 
 def render(camera, objects, sun):
@@ -26,20 +26,24 @@ def render(camera, objects, sun):
             ray = Ray(camera.pos, direction)
 
             t, hit_obj = test_collision(ray, objects)
-            if hit_obj is None:
-                framebuffer[y_pixel][x_pixel] = np.array([0.8 - y_pixel / 255.0, 0.8 - y_pixel / 255.0, 0.8])
+            if hit_obj is None:  # background
+                framebuffer[y_pixel][x_pixel] = np.array(
+                    [0.8 - (y_pixel / float(HEIGHT)) * 0.8,
+                     0.8 - (y_pixel / float(HEIGHT)) * 0.8,
+                     0.8]
+                )
             else:
                 # check shadow
                 hit_point = ray.orig + ray.dir * t
                 hit_point_normal = norm(hit_point - hit_obj.pos)
                 light_dir = sun.pos - hit_point
                 light_dir = norm(light_dir)
-                light_ray = Ray(hit_point + light_dir * 0.00001, light_dir) # add some bias to avoid self-intersection
+                light_ray = Ray(hit_point + light_dir * 0.00001, light_dir)  # add some bias to avoid self-intersection
 
                 lt, light_collision_obj = test_collision(light_ray, objects)
                 if light_collision_obj is not None:
                     framebuffer[y_pixel][x_pixel] = np.zeros(3)
-                else: # add smooth lighting
+                else:  # add smooth lighting
                     intensity = max(0, np.dot(light_dir, hit_point_normal))
                     framebuffer[y_pixel][x_pixel] = hit_obj.color * intensity
 
@@ -77,6 +81,8 @@ def main():
 
     plt.imshow(img)
     plt.show()
+
+    # plt.imsave('test.png', img)
 
 
 if __name__ == '__main__':
