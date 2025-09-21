@@ -9,7 +9,7 @@ def intersect(ray: Ray, sphere: Sphere):
     c = L.dot(L) - sphere.radius * sphere.radius
     solution = solve_quadratic(a, b, c)
     if solution is None:
-        return False
+        return None
 
     t0, t1 = solution
 
@@ -19,6 +19,6 @@ def intersect(ray: Ray, sphere: Sphere):
     if t0 < 0:
         t0 = t1
         if t0 < 0:
-            return False
+            return None
     t = t0
-    return True
+    return t

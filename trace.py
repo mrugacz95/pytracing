@@ -4,14 +4,14 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 from collisions import intersect
-from models import Camera, Sphere, Ray
+from math_utils import norm
+from models import Camera, Sphere, Ray, Sun
 
 WIDTH = 280
-HEIGHT = 200
+HEIGHT = 220
 
 
-def render(camera, objects):
-
+def render(camera, objects, sun):
     framebuffer = np.zeros((HEIGHT, WIDTH, 3))
     aspect_ratio = WIDTH / float(HEIGHT)
     scale = tan(np.deg2rad(camera.fov * 0.5))
@@ -25,29 +25,55 @@ def render(camera, objects):
             direction = direction / np.linalg.norm(direction)
             ray = Ray(camera.pos, direction)
 
+            t, hit_obj = test_collision(ray, objects)
+            if hit_obj is None:
+                framebuffer[y_pixel][x_pixel] = np.array([0.8 - y_pixel / 255.0, 0.8 - y_pixel / 255.0, 0.8])
+            else:
+                # check shadow
+                hit_point = ray.orig + ray.dir * t
+                hit_point_normal = norm(hit_point - hit_obj.pos)
+                light_dir = sun.pos - hit_point
+                light_dir = norm(light_dir)
+                light_ray = Ray(hit_point + light_dir * 0.00001, light_dir) # add some bias to avoid self-intersection
 
-            for obj in objects:
-                if test_collision(ray, obj):
-                    framebuffer[y_pixel][x_pixel] = obj.color
+                lt, light_collision_obj = test_collision(light_ray, objects)
+                if light_collision_obj is not None:
+                    framebuffer[y_pixel][x_pixel] = np.zeros(3)
+                else: # add smooth lighting
+                    intensity = max(0, np.dot(light_dir, hit_point_normal))
+                    framebuffer[y_pixel][x_pixel] = hit_obj.color * intensity
 
     return framebuffer
 
-def test_collision(ray, obj):
-    if isinstance(obj, Sphere):
-        return intersect(ray, obj)
-    raise ValueError("Unknown object type")
+
+def test_collision(ray, objects):
+    closest = float('inf')
+    hit_obj = None
+    for obj in objects:
+        if isinstance(obj, Sphere):
+            t = intersect(ray, obj)
+            if t is not None and t < closest:
+                closest = t
+                hit_obj = obj
+    return closest, hit_obj
 
 
 def main():
-    camera = Camera(pos=np.array([0.0, 0.0, -35.0]))
+    camera = Camera(pos=np.array([0.0, 0.0, -75.0]))
 
-    sphere1 = Sphere(radius=9.5, color=np.array([1.0, 1.0, 0.0]))
+    sphere1 = Sphere(pos=np.array([1, 1, 25]), radius=4.5, color=np.array([1.0, 1.0, 0.0]))
 
-    sphere2 = Sphere(pos=np.array([3, 4, -12]), radius=9.5, color=np.array([0.0, 0.0, 1.0]))
+    sphere2 = Sphere(pos=np.array([0, -15, -15]), radius=5.5, color=np.array([0.0, 0.0, 1.0]))
 
-    objects = [sphere1, sphere2]
+    sphere3 = Sphere(pos=np.array([3, -25, -25]), radius=2.5, color=np.array([1.0, 0.0, 0.0]))
 
-    img = render(camera, objects)
+    ground = Sphere(pos=np.array([103, 0, 0]), radius=100.0, color=np.array([0.0, 1.0, 0.2]))
+
+    objects = [sphere1, sphere2, ground, sphere3]
+
+    sun = Sun(pos=np.array([-50.0, -50.0, -100.0]))
+
+    img = render(camera, objects, sun)
 
     plt.imshow(img)
     plt.show()

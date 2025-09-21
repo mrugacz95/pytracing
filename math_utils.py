@@ -1,6 +1,8 @@
 # from https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection.html
 from math import sqrt
 
+import numpy as np
+
 
 def solve_quadratic(a, b, c):
     discr = b * b - 4 * a * c
@@ -18,3 +20,7 @@ def solve_quadratic(a, b, c):
     if x0 > x1:
         x0, x1 = x1, x0
     return x0, x1
+
+
+def norm(vec):
+    return vec / float(np.linalg.norm(vec))
