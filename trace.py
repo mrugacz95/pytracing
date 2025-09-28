@@ -2,36 +2,32 @@ from math import tan
 
 from matplotlib import pyplot as plt
 import numpy as np
+from tqdm.std import tqdm
 
 from collisions import intersect
 from math_utils import norm
 from models import Camera, Sphere, Ray, Sun
 
-WIDTH = 480
-HEIGHT = 420
-
 
 def render(camera, objects, sun):
-    framebuffer = np.zeros((HEIGHT, WIDTH, 3))
-    aspect_ratio = WIDTH / float(HEIGHT)
+    framebuffer = np.zeros((camera.height, camera.width, 3))
+    aspect_ratio = camera.width / float(camera.height)
     scale = tan(np.deg2rad(camera.fov * 0.5))
 
-    for y_pixel in range(HEIGHT):
-        for x_pixel in range(WIDTH):
+    for y_pixel in tqdm(range(camera.height)):
+        for x_pixel in range(camera.width):
 
-            x = (2 * (y_pixel + 0.5) / float(WIDTH) - 1) * aspect_ratio * scale
-            y = (1 - 2 * (x_pixel + 0.5) / float(HEIGHT)) * scale
-            direction = np.array([x, y, 1])
+            x = (2 * (x_pixel + 0.5) / float(camera.width) - 1) * aspect_ratio * scale
+            y = (1 - 2 * (y_pixel + 0.5) / float(camera.height)) * scale
+            direction = np.array([x, y, -1])
             direction = direction / np.linalg.norm(direction)
             ray = Ray(camera.pos, direction)
 
             t, hit_obj = test_collision(ray, objects)
             if hit_obj is None:  # background
-                framebuffer[y_pixel][x_pixel] = np.array(
-                    [0.8 - (y_pixel / float(HEIGHT)) * 0.8,
-                     0.8 - (y_pixel / float(HEIGHT)) * 0.8,
-                     0.8]
-                )
+                full_color = np.array([0.5, 0.8, 1.0])
+                framebuffer[y_pixel][x_pixel] = ((1 - full_color) * (np.array([y_pixel, y_pixel, 0])) /
+                                                 float(camera.height) + full_color)
             else:
                 # check shadow
                 hit_point = ray.orig + ray.dir * t
@@ -63,26 +59,22 @@ def test_collision(ray, objects):
 
 
 def main():
-    camera = Camera(pos=np.array([0.0, 0.0, -75.0]))
+    width = 580
+    height = 420
+    camera = Camera(width=width, height=height, pos=np.array([0.0, 0.0, 0.0]), fov=75)
 
-    sphere1 = Sphere(pos=np.array([1, 1, 25]), radius=4.5, color=np.array([1.0, 1.0, 0.0]))
+    sphere1 = Sphere(pos=np.array([0, 0, -1]), radius=0.5, color=np.array([1.0, 1.0, 0.0]))
 
-    sphere2 = Sphere(pos=np.array([0, -15, -15]), radius=5.5, color=np.array([0.0, 0.0, 1.0]))
+    ground = Sphere(pos=np.array([0, -100.5, -1]), radius=100.0, color=np.array([0.0, 1.0, 0.2]))
 
-    sphere3 = Sphere(pos=np.array([3, -25, -25]), radius=2.5, color=np.array([1.0, 0.0, 0.0]))
+    objects = [sphere1, ground]
 
-    ground = Sphere(pos=np.array([103, 0, 0]), radius=100.0, color=np.array([0.0, 1.0, 0.2]))
-
-    objects = [sphere1, sphere2, ground, sphere3]
-
-    sun = Sun(pos=np.array([-50.0, -50.0, -100.0]))
+    sun = Sun(pos=np.array([50, 50, 50]))
 
     img = render(camera, objects, sun)
 
     plt.imshow(img)
     plt.show()
-
-    # plt.imsave('test.png', img)
 
 
 if __name__ == '__main__':
