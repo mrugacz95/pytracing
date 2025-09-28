@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import uniform_direction
 
 from camera import Camera
-from math_utils import norm, random_on_hemisphere, near_zero, reflect
+from math_utils import norm, random_on_hemisphere, near_zero, reflect, refract
 from models import Ray
 
 
@@ -68,3 +68,33 @@ class Metal(Material):
         scattered = Ray(hit_record.p, reflected)
         attenuation = self.albedo
         return True, scattered, attenuation
+
+
+class Dielectric(Material):
+    def __init__(self, refraction):
+        self.refraction = refraction  # Index of Refraction
+
+    def scatter(self, ray, hit_record):
+        attenuation = np.ones(3)
+        ri = (1.0 / self.refraction) if hit_record.front_face else self.refraction
+        unit_direction = norm(ray.dir)
+
+        cos_theta = min(np.dot(-unit_direction, hit_record.normal), 1.0)
+        sin_theta = np.sqrt(1.0 - cos_theta * cos_theta)
+
+        cannot_refract = ri * sin_theta > 1.0
+
+        if cannot_refract or self.reflectance(cos_theta, ri) > np.random.rand():
+            direction = reflect(unit_direction, hit_record.normal)
+        else:
+            direction = refract(unit_direction, hit_record.normal, ri)
+
+        scattered = Ray(hit_record.p, direction)
+        return True, scattered, attenuation
+
+    @staticmethod
+    def reflectance(cosine, refraction_index):
+        # Use Schlick's approximation for reflectance.
+        r0 = (1 - refraction_index) / (1 + refraction_index)
+        r0 = r0 * r0
+        return r0 + (1 - r0) * np.pow((1 - cosine), 5)

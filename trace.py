@@ -3,8 +3,7 @@ from matplotlib import pyplot as plt
 
 from camera import Camera
 from hittable import Sphere
-from material import Lambertian, NormalColorMaterial, SharpShadowMaterial, Metal
-from models import Sun
+from material import Lambertian, Metal, Dielectric
 
 
 def main():
@@ -12,7 +11,7 @@ def main():
     height = 420
     camera = Camera(width=width, height=height, pos=np.array([0.0, 0.0, 1.0]), fov=60)
 
-    material_left = Metal(albedo=np.array([0.8, 0.8, 0.8]))
+    material_left = Dielectric(refraction=1.5)
     material_center = Lambertian(albedo=np.array([0.1, 0.2, 0.5]))
     material_right = Metal(albedo=np.array([0.8, 0.6, 0.2]))
     material_ground = Lambertian(albedo=np.array([0.8, 0.8, 0.0]))
@@ -28,9 +27,9 @@ def main():
     img = camera.render(objects)
 
     plt.imshow(img)
-    # plt.show()
+    plt.show()
 
-    plt.savefig('test.png')
+    # plt.savefig('test.png')
 
 
 if __name__ == '__main__':

@@ -48,3 +48,9 @@ def near_zero(vec):
 
 def reflect(vec, normal):
     return vec - 2 * np.dot(vec, normal) * normal
+
+def refract(uv, normal, etai_over_etat):
+    cos_theta = min(np.dot(-uv, normal), 1.0)
+    r_out_perp = etai_over_etat * (uv + cos_theta * normal)
+    r_out_parallel = -sqrt(abs(1.0 - np.dot(r_out_perp, r_out_perp))) * normal
+    return r_out_perp + r_out_parallel
