@@ -1,14 +1,10 @@
-import abc
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import numpy as np
 
 
-
-
-
 class Hittable(ABC):
-    @abc.abstractmethod
+    @abstractmethod
     def hit(self, ray, t_min, t_max):
         pass
 
