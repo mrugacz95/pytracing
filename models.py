@@ -1,26 +1,4 @@
-from abc import ABC, abstractmethod
-
 import numpy as np
-
-
-class Hittable(ABC):
-    @abstractmethod
-    def hit(self, ray, t_min, t_max):
-        pass
-
-
-class Sphere(Hittable):
-    def hit(self, ray, t_min, t_max):
-        pass
-
-    pos = np.zeros(3)
-    radius = 1.0
-    color = np.array([1.0, 1.0, 0.0])
-
-    def __init__(self, pos=np.zeros(3), radius=1.0, color=np.array([1.0, 1.0, 1.0])):
-        self.pos = pos
-        self.radius = radius
-        self.color = color
 
 
 class Ray:
@@ -33,11 +11,12 @@ class Ray:
 
 
 class HitRecord:
-    def __init__(self, p, normal, t, front_face):
+    def __init__(self, p, normal, t, front_face, material):
         self.p = p
         self.normal = normal
         self.t = t
         self.front_face = front_face
+        self.material = material
 
 
 class Sun:

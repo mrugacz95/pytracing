@@ -1,15 +1,14 @@
-from math import tan
-
 import numpy as np
 from tqdm.std import tqdm
 
-from collisions import intersect
-from math_utils import norm, sample_square
-from models import Ray, Sphere
+from math_utils import sample_square
+from models import Ray
 
 
 class Camera:
-    def __init__(self, width, height, pos=np.zeros(3), fov=60, samples=10):
+    MAX_DEPTH = 50
+
+    def __init__(self, width, height, pos=np.zeros(3), fov=60, samples=4):
         self.pos = pos
         self.fov = fov
         self.width = width
@@ -40,9 +39,8 @@ class Camera:
                     direction = np.array([x, y, -1])
                     direction = direction / np.linalg.norm(direction)
 
-
                     ray = Ray(self.pos, direction)
-                    color += self.ray_color(ray, sun, objects, 2)
+                    color += self.ray_color(ray, sun, objects, depth=self.MAX_DEPTH)
 
                 color /= self.samples
 
@@ -51,32 +49,38 @@ class Camera:
         return framebuffer
 
     def ray_color(self, ray, sun, objects, depth):
-        t, hit_obj = self.test_collision(ray, objects)
-        if hit_obj is None:  # background
-            full_color = np.array([0.5, 0.8, 1.0])
-            return (1 - full_color) * (np.array([ray.dir[1], ray.dir[1], 0])) + full_color
-        else:
-            # check shadow
-            hit_point = ray.orig + ray.dir * t
-            hit_point_normal = norm(hit_point - hit_obj.pos)
-            light_dir = sun.pos - hit_point
-            light_dir = norm(light_dir)
-            light_ray = Ray(hit_point + light_dir * 0.00001, light_dir)  # add some bias to avoid self-intersection
+        if depth <= 0:
+            return np.zeros(3)
 
-            lt, light_collision_obj = self.test_collision(light_ray, objects)
-            if light_collision_obj is not None:
-                return np.zeros(3)
-            else:  # add smooth lighting
-                intensity = max(0, np.dot(light_dir, hit_point_normal))
-                return hit_obj.color * intensity
+        t, hit_obj = self.test_collision(ray, objects)
+        if hit_obj is not None:
+            # # check shadow
+            # hit_point = ray.orig + ray.dir * t
+            # hit_point_normal = norm(hit_point - hit_obj.pos)
+            # light_dir = sun.pos - hit_point
+            # light_dir = norm(light_dir)
+            # light_ray = Ray(hit_point + light_dir * 0.00001, light_dir)  # add some bias to avoid self-intersection
+            #
+            # lt, light_collision_obj = self.test_collision(light_ray, objects)
+            # if light_collision_obj is not None:
+            #     return np.zeros(3)
+            # else:  # add smooth lighting
+            #     intensity = max(0, np.dot(light_dir, hit_point_normal))
+            #     return hit_obj.color * intensity
+            (scattered, new_ray, attenuation) = hit_obj.material.scatter(ray, hit_obj)
+            if scattered:
+                return attenuation * self.ray_color(new_ray, sun, objects, depth - 1)
+            return np.array([0, 0, 0])
+
+        full_color = np.array([0.5, 0.8, 1.0])
+        return (1 - full_color) * (np.array([ray.dir[1], ray.dir[1], 0])) + full_color
 
     def test_collision(self, ray, objects):
         closest = float('inf')
         hit_obj = None
         for obj in objects:
-            if isinstance(obj, Sphere):
-                t = intersect(ray, obj)
-                if t is not None and t < closest:
-                    closest = t
-                    hit_obj = obj
+            hit_record = obj.hit(ray, 0.001, closest)
+            if hit_record is not None and hit_record.t < closest:
+                closest = hit_record.t
+                hit_obj = hit_record
         return closest, hit_obj
