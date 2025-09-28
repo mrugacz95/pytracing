@@ -27,10 +27,10 @@ class Sphere(Hittable):
             hit_point = ray.orig + ray.dir * t
             hit_point_normal = norm(hit_point - self.pos)
             return HitRecord(
-                p=ray.orig + ray.dir * t,
+                p=hit_point,
                 normal=hit_point_normal,
                 t = t,
-                front_face = False,
+                front_face = np.dot(hit_point - self.pos, ray.dir) < 0,
                 material = self.material
             )
         return None

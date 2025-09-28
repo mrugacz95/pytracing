@@ -15,7 +15,7 @@ class Camera:
         self.height = height
         self.samples = samples
 
-    def render(self, objects, sun):
+    def render(self, objects):
         framebuffer = np.zeros((self.height, self.width, 3))
         aspect_ratio = self.width / float(self.height)
         scale = np.tan(np.deg2rad(self.fov * 0.5))
@@ -40,15 +40,17 @@ class Camera:
                     direction = direction / np.linalg.norm(direction)
 
                     ray = Ray(self.pos, direction)
-                    color += self.ray_color(ray, sun, objects, depth=self.MAX_DEPTH)
+                    color += self.ray_color(ray, objects, depth=self.MAX_DEPTH)
 
                 color /= self.samples
 
                 framebuffer[y_pixel][x_pixel] = color
 
+        framebuffer = np.sqrt(framebuffer) # gamma correction
+
         return framebuffer
 
-    def ray_color(self, ray, sun, objects, depth):
+    def ray_color(self, ray, objects, depth):
         if depth <= 0:
             return np.zeros(3)
 
@@ -56,8 +58,8 @@ class Camera:
         if hit_obj is not None:
             (scattered, new_ray, attenuation) = hit_obj.material.scatter(ray, hit_obj)
             if scattered:
-                return attenuation * self.ray_color(new_ray, sun, objects, depth - 1)
-            return attenuation
+                return attenuation * self.ray_color(new_ray, objects, depth - 1)
+            return attenuation # no scattering, return color directly?
 
         full_color = np.array([0.5, 0.8, 1.0])
         return (1 - full_color) * (np.array([ray.dir[1], ray.dir[1], 0])) + full_color

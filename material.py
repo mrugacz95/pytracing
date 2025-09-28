@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import uniform_direction
 
 from camera import Camera
-from math_utils import norm, random_on_hemisphere, near_zero
+from math_utils import norm, random_on_hemisphere, near_zero, reflect
 from models import Ray
 
 
@@ -21,6 +21,7 @@ class NormalColorMaterial(Material):
     def scatter(self, ray, hit_record):
         return False, None, (hit_record.normal + 1) / 2.0
 
+
 class SharpShadowMaterial(Material):
     def __init__(self, color, sun, objects):
         self.color = color
@@ -28,18 +29,17 @@ class SharpShadowMaterial(Material):
         self.objects = objects
 
     def scatter(self, ray, hit_record):
-
         light_dir = self.sun.pos - hit_record.p
         light_dir = norm(light_dir)
         light_ray = Ray(hit_record.p, light_dir)
 
         closest, hit_obj = Camera.test_collision(light_ray, self.objects)
         if hit_obj is not None:
-            return False, None, np.zeros(3) # black in shadow
-
+            return False, None, np.zeros(3)  # black in shadow
 
         intensity = max(0, np.dot(light_dir, hit_record.normal))
         return False, None, self.color * intensity
+
 
 class Lambertian(Material):
     def __init__(self, albedo):
@@ -52,5 +52,19 @@ class Lambertian(Material):
             scatter_direction = hit_record.normal
 
         scattered = Ray(hit_record.p, norm(scatter_direction))
+        attenuation = self.albedo
+
+        if np.random.rand() < 0.5:
+            return False, None, attenuation
+        return True, scattered, attenuation
+
+
+class Metal(Material):
+    def __init__(self, albedo):
+        self.albedo = albedo
+
+    def scatter(self, ray, hit_record):
+        reflected = reflect(ray.dir, hit_record.normal)
+        scattered = Ray(hit_record.p, reflected)
         attenuation = self.albedo
         return True, scattered, attenuation
