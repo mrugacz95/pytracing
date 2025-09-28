@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.image import imsave
 
 from camera import Camera
 from hittable import Sphere
@@ -27,9 +28,9 @@ def main():
     img = camera.render(objects)
 
     plt.imshow(img)
-    # plt.show()
+    plt.show()
 
-    plt.savefig('test.png')
+    imsave('result.png', img)
 
 
 if __name__ == '__main__':
