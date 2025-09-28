@@ -24,3 +24,6 @@ def solve_quadratic(a, b, c):
 
 def norm(vec):
     return vec / float(np.linalg.norm(vec))
+
+def sample_square():
+    return np.random.rand(2) - 0.5

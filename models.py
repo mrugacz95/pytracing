@@ -4,17 +4,7 @@ from abc import ABC
 import numpy as np
 
 
-class Camera:
-    pos = np.zeros(3)
-    dir = np.array([0.0, 0.0, 1.0])
-    fov = 60
 
-    def __init__(self, width, height, pos=np.zeros(3), dir=np.array([0.0, 0.0, 1.0]), fov=60):
-        self.pos = pos
-        self.dir = dir
-        self.fov = fov
-        self.width = width
-        self.height = height
 
 
 class Hittable(ABC):
