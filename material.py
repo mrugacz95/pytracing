@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
+
+import numpy as np
 from scipy.stats import uniform_direction
 
+from camera import Camera
 from math_utils import norm, random_on_hemisphere, near_zero
 from models import Ray
 
@@ -18,6 +21,25 @@ class NormalColorMaterial(Material):
     def scatter(self, ray, hit_record):
         return False, None, (hit_record.normal + 1) / 2.0
 
+class SharpShadowMaterial(Material):
+    def __init__(self, color, sun, objects):
+        self.color = color
+        self.sun = sun
+        self.objects = objects
+
+    def scatter(self, ray, hit_record):
+
+        light_dir = self.sun.pos - hit_record.p
+        light_dir = norm(light_dir)
+        light_ray = Ray(hit_record.p, light_dir)
+
+        closest, hit_obj = Camera.test_collision(light_ray, self.objects)
+        if hit_obj is not None:
+            return False, None, np.zeros(3) # black in shadow
+
+
+        intensity = max(0, np.dot(light_dir, hit_record.normal))
+        return False, None, self.color * intensity
 
 class Lambertian(Material):
     def __init__(self, albedo):

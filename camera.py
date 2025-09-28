@@ -54,28 +54,16 @@ class Camera:
 
         t, hit_obj = self.test_collision(ray, objects)
         if hit_obj is not None:
-            # # check shadow
-            # hit_point = ray.orig + ray.dir * t
-            # hit_point_normal = norm(hit_point - hit_obj.pos)
-            # light_dir = sun.pos - hit_point
-            # light_dir = norm(light_dir)
-            # light_ray = Ray(hit_point + light_dir * 0.00001, light_dir)  # add some bias to avoid self-intersection
-            #
-            # lt, light_collision_obj = self.test_collision(light_ray, objects)
-            # if light_collision_obj is not None:
-            #     return np.zeros(3)
-            # else:  # add smooth lighting
-            #     intensity = max(0, np.dot(light_dir, hit_point_normal))
-            #     return hit_obj.color * intensity
             (scattered, new_ray, attenuation) = hit_obj.material.scatter(ray, hit_obj)
             if scattered:
                 return attenuation * self.ray_color(new_ray, sun, objects, depth - 1)
-            return np.array([0, 0, 0])
+            return attenuation
 
         full_color = np.array([0.5, 0.8, 1.0])
         return (1 - full_color) * (np.array([ray.dir[1], ray.dir[1], 0])) + full_color
 
-    def test_collision(self, ray, objects):
+    @staticmethod
+    def test_collision(ray, objects):
         closest = float('inf')
         hit_obj = None
         for obj in objects:
