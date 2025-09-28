@@ -1,5 +1,6 @@
 import numpy as np
-from tqdm.std import tqdm
+from joblib import Parallel, delayed
+from tqdm_joblib import tqdm_joblib
 
 from math_utils import sample_square
 from models import Ray
@@ -8,7 +9,7 @@ from models import Ray
 class Camera:
     MAX_DEPTH = 50
 
-    def __init__(self, width, height, pos=np.zeros(3), fov=60, samples=6):
+    def __init__(self, width, height, pos=np.zeros(3), fov=60, samples=20):
         self.pos = pos
         self.fov = fov
         self.width = width
@@ -20,7 +21,10 @@ class Camera:
         aspect_ratio = self.width / float(self.height)
         scale = np.tan(np.deg2rad(self.fov * 0.5))
 
-        for y_pixel in tqdm(range(self.height)):
+        def render_row(y_pixel):
+
+            row = np.zeros((self.width, 3))
+
             for x_pixel in range(self.width):
 
                 color = np.zeros(3, dtype=float)
@@ -44,9 +48,16 @@ class Camera:
 
                 color /= self.samples
 
-                framebuffer[y_pixel][x_pixel] = color
+                row[x_pixel] = color
 
-        framebuffer = np.sqrt(framebuffer) # gamma correction
+            return row
+
+        with tqdm_joblib(total=self.height):
+            framebuffer[:] = Parallel(n_jobs=8)(
+                delayed(render_row)(y_pixel) for y_pixel in range(self.height)
+            )
+
+        framebuffer = np.sqrt(framebuffer)  # gamma correction
 
         return framebuffer
 
@@ -59,7 +70,7 @@ class Camera:
             (scattered, new_ray, attenuation) = hit_obj.material.scatter(ray, hit_obj)
             if scattered:
                 return attenuation * self.ray_color(new_ray, objects, depth - 1)
-            return attenuation # no scattering, return color directly?
+            return attenuation  # no scattering, return color directly?
 
         full_color = np.array([0.5, 0.8, 1.0])
         return (1 - full_color) * (np.array([ray.dir[1], ray.dir[1], 0])) + full_color

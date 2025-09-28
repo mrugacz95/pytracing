@@ -7,8 +7,8 @@ from material import Lambertian, Metal, Dielectric
 
 
 def main():
-    width = 580
-    height = 420
+    width = 1024
+    height = 768
     camera = Camera(width=width, height=height, pos=np.array([0.0, 0.0, 1.0]), fov=60)
 
     material_left = Dielectric(refraction=1.5)
@@ -27,9 +27,9 @@ def main():
     img = camera.render(objects)
 
     plt.imshow(img)
-    plt.show()
+    # plt.show()
 
-    # plt.savefig('test.png')
+    plt.savefig('test.png')
 
 
 if __name__ == '__main__':

@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
-from scipy.stats import uniform_direction
 
 from camera import Camera
 from math_utils import norm, random_on_hemisphere, near_zero, reflect, refract
