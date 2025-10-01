@@ -14,9 +14,6 @@ class Material(ABC):
 
 
 class NormalColorMaterial(Material):
-    def __init__(self, albedo):
-        self.albedo = albedo
-
     def scatter(self, ray, hit_record):
         return False, None, (hit_record.normal + 1) / 2.0
 

@@ -9,7 +9,7 @@ from models import Ray
 class Camera:
     MAX_DEPTH = 50
 
-    def __init__(self, width, height, pos=np.zeros(3), fov=60, samples=20):
+    def __init__(self, width, height, pos=np.zeros(3), fov=60, samples=8):
         self.pos = pos
         self.fov = fov
         self.width = width
